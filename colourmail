@@ -46,13 +46,20 @@ for arg; do
 	header_args+=(--to "$arg")
 done
 
-tempfile="$(mktemp)"
-trap 'rm -f -- "$tempfile"' EXIT
+tempdir="$(mktemp -d colourmail.$$.XXXXX)"
+trap 'rm -rf -- "$tempdir"' EXIT
 
-cat >"$tempfile"
+input_file="$tempdir"/input
+text_file="$tempdir"/text
+html_file="$tempdir"/html
 
-[[ "$check_empty" && ! -s "$tempfile" ]] && exit 0
+cat >"$input_file"
 
-mime-construct "${header_args[@]}" --multipart 'multipart/alternative' --file <(ansi2txt <"$tempfile") --type 'text/html' --file <(ansi2html "${ansi2html_args[@]}" <"$tempfile")
+[[ "$check_empty" && ! -s "$input_file" ]] && exit 0
+
+ansi2txt <"$input_file" >"$text_file"
+ansi2html "${ansi2html_args[@]}" <"$input_file" >"$html_file"
+
+mime-construct "${header_args[@]}" --multipart 'multipart/alternative' --file "$text_file" --type 'text/html' --file "$html_file"
 
 # vim: ft=bash noet ts=8
