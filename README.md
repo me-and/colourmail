@@ -40,6 +40,41 @@ few extras of its own.
     or 69 (`EX_UNAVAILABLE`) if not.  The script will never send any mail if
     this option is specified.
 
+### Example
+
+I have systemd set up to send me an email whenever a service fails, with a unit
+file called `mail-state@.service` similar to the following:
+
+```INI
+[Unit]
+Description=Unit %i state report
+
+[Service]
+Type=oneshot
+Environment=SYSTEMD_COLORS=True
+Environment=SYSTEMD_URLIFY=False
+Environment=UNIT=%i
+Environment=USER=%u
+ExecStart=bash -euc 'systemctl status "$$UNIT" | colourmail -s "Unit $$UNIT $$(systemctl show -PActiveState "$$UNIT")" -- "$$USER"'
+KillMode=process
+```
+
+This gets called automatically whenever any service unit fails by having the
+following in `/etc/systemd/system/service.d/mail-failure.conf`:
+
+```INI
+[Unit]
+OnFailure=mail-state@%n.service
+```
+
+Similar things will work if you want to know a unit has successfully terminated
+by configuring `OnSuccess=`, or just for knowing a unit has activated by
+configuring `Wants=` and `Before=`.
+
+The above would clearly work without the colours and using the normal `mail`
+tools, but I found it easier to read with systemd's colour output.  After all,
+there's a reason it's in the terminal output!
+
 [mail]: https://man.freebsd.org/cgi/man.cgi?format=html&query=mail%281%29
 [mimeconstruct]: http://www.argon.org/~roderick/
 [colorizedlogs]: https://github.com/kilobyte/colorized-logs
