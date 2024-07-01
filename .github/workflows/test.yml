@@ -1,0 +1,10 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Shellcheck
+        run: shellcheck --enable=check-extra-masked-returns,check-set-e-suppressed,deprecate-which,require-double-brackets,quote-safe-variables colourmail
